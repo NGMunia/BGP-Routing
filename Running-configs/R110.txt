@@ -1,0 +1,124 @@
+R110#sh running-config
+Building configuration...
+
+Current configuration : 3723 bytes
+!
+version 15.6
+service timestamps debug datetime msec
+service timestamps log datetime msec
+no service password-encryption
+!
+hostname R110
+!
+boot-start-marker
+boot-end-marker
+!
+!
+!
+no aaa new-model
+ethernet lmi ce
+!
+!
+!
+mmi polling-interval 60
+no mmi auto-configure
+no mmi pvc
+mmi snmp-timeout 180
+!
+!
+!
+!
+!
+no ip icmp rate-limit unreachable
+!
+!
+!
+!
+!
+!
+no ip domain lookup
+ip cef
+ipv6 unicast-routing
+ipv6 cef
+!
+multilink bundle-name authenticated
+!
+!
+!
+!
+!
+redundancy
+!
+no cdp log mismatch duplex
+!
+ip tcp synwait-time 5
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+interface GigabitEthernet0/0
+ ip address 110.110.110.1 255.255.255.252
+ duplex auto
+ speed auto
+ media-type rj45
+ ipv6 address 2001:110:110:1::1/64
+!
+interface GigabitEthernet0/1
+ ip address 131.131.131.2 255.255.255.252
+ duplex auto
+ speed auto
+ media-type rj45
+ ipv6 address 2001:131:131:1::2/64
+!
+interface GigabitEthernet0/2
+ no ip address
+ shutdown
+ duplex auto
+ speed auto
+ media-type rj45
+!
+interface GigabitEthernet0/3
+ no ip address
+ shutdown
+ duplex auto
+ speed auto
+ media-type rj45
+!
+router bgp 110
+ bgp log-neighbor-changes
+ neighbor 2001:110:110:1::2 remote-as 123
+ neighbor 2001:131:131:1::1 remote-as 130
+ neighbor 110.110.110.2 remote-as 123
+ neighbor 131.131.131.1 remote-as 130
+ !
+ address-family ipv4
+  no neighbor 2001:110:110:1::2 activate
+  no neighbor 2001:131:131:1::1 activate
+  neighbor 110.110.110.2 activate
+  neighbor 131.131.131.1 activate
+ exit-address-family
+ !
+ address-family ipv6
+  neighbor 2001:110:110:1::2 activate
+  neighbor 2001:131:131:1::1 activate
+ exit-address-family
+!
+ip forward-protocol nd
+!
+!
+no ip http server
+no ip http secure-server
+!
+!
+!
+!
+control-plane

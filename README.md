@@ -13,3 +13,4 @@ AS-PREPENDING:
   prefix should enter through R3
 
 * AS123 should be a non-Transit AS
+* Branch routers are configured with static routes to test connectivity/reachability

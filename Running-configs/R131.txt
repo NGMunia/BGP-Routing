@@ -1,0 +1,161 @@
+Building configuration...
+
+Current configuration : 4760 bytes
+!
+version 15.6
+service timestamps debug datetime msec
+service timestamps log datetime msec
+no service password-encryption
+!
+hostname R131
+!
+boot-start-marker
+boot-end-marker
+!
+!
+!
+no aaa new-model
+ethernet lmi ce
+!
+!
+!
+mmi polling-interval 60
+no mmi auto-configure
+no mmi pvc
+mmi snmp-timeout 180
+!
+!
+!
+!
+!
+no ip icmp rate-limit unreachable
+!
+!
+!
+!
+!
+!
+no ip domain lookup
+ip cef
+ipv6 unicast-routing
+ipv6 cef
+!
+multilink bundle-name authenticated
+!
+!
+!
+!
+!
+redundancy
+!
+no cdp log mismatch duplex
+!
+ip tcp synwait-time 5
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+interface GigabitEthernet0/0
+ ip address 131.131.131.1 255.255.255.252
+ duplex auto
+ speed auto
+ media-type rj45
+ ipv6 address 2001:131:131:1::1/64
+!
+interface GigabitEthernet0/1
+ ip address 10.0.0.2 255.255.255.252
+ duplex auto
+ speed auto
+ media-type rj45
+ ipv6 address 2001:ACAD:DB8:1::2/64
+!
+interface GigabitEthernet0/2
+ ip address 131.131.131.5 255.255.255.252
+ duplex auto
+ speed auto
+ media-type rj45
+ ipv6 address 2001:131:131:2::1/64
+!
+interface GigabitEthernet0/3
+ ip address 200.200.200.6 255.255.255.252
+ duplex auto
+ speed auto
+ media-type rj45
+ ipv6 address 2001:200:200:2::2/64
+!
+!
+router eigrp EIGRP
+ !
+ address-family ipv4 unicast autonomous-system 100
+  !
+  topology base
+  exit-af-topology
+  network 10.0.0.0
+ exit-address-family
+ !
+ address-family ipv6 unicast autonomous-system 100
+  !
+  af-interface GigabitEthernet0/0
+   shutdown
+  exit-af-interface
+  !
+  af-interface GigabitEthernet0/2
+   shutdown
+  exit-af-interface
+  !
+  af-interface GigabitEthernet0/3
+   shutdown
+  exit-af-interface
+  !
+  topology base
+  exit-af-topology
+ exit-address-family
+!
+router bgp 130
+ bgp log-neighbor-changes
+ neighbor 10.0.0.1 remote-as 130
+ neighbor 2001:131:131:1::2 remote-as 110
+ neighbor 2001:131:131:2::2 remote-as 140
+ neighbor 2001:200:200:2::1 remote-as 200
+ neighbor 2001:ACAD:DB8:1::1 remote-as 130
+ neighbor 131.131.131.2 remote-as 110
+ neighbor 131.131.131.6 remote-as 140
+ neighbor 200.200.200.5 remote-as 200
+ !
+ address-family ipv4
+  neighbor 10.0.0.1 activate
+  neighbor 10.0.0.1 next-hop-self
+  no neighbor 2001:131:131:1::2 activate
+  no neighbor 2001:131:131:2::2 activate
+  no neighbor 2001:200:200:2::1 activate
+  no neighbor 2001:ACAD:DB8:1::1 activate
+  neighbor 131.131.131.2 activate
+  neighbor 131.131.131.6 activate
+  neighbor 200.200.200.5 activate
+ exit-address-family
+ !
+ address-family ipv6
+  neighbor 2001:131:131:1::2 activate
+  neighbor 2001:131:131:2::2 activate
+  neighbor 2001:200:200:2::1 activate
+  neighbor 2001:ACAD:DB8:1::1 activate
+  neighbor 2001:ACAD:DB8:1::1 next-hop-self
+ exit-address-family
+!
+ip forward-protocol nd
+!
+!
+no ip http server
+no ip http secure-server
+!
+!
+!
