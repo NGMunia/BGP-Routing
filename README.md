@@ -15,6 +15,11 @@ in BGP, there's a rule:
 This is to prevent routing loops inside an AS.
 A route reflector allows iBGP routers to pair with it and not with each other instead of full mesh.
 
+```bash
+address-family ipv4
+  neighbor 2.2.2.2 route-reflector-client
+```
+
 ---
 ### Update-source Loopback
 By default, BGP uses the outgoing physical interface's IP to source its TCP session. This is a problem because if that interface goes down, the BGP session drops — even if another path to the neighbor exists.
@@ -26,6 +31,13 @@ This must be done on both routers, otherwise the TCP session won't form — one 
 
 The loopback IPs must be reachable between the two routers. In an iBGP setup this is typically handled by your IGP (OSPF, EIGRP, IS-IS):
 
+```bash
+router bgp 123
+ bgp log-neighbor-changes
+ neighbor 2.2.2.2 remote-as 123
+ neighbor 2.2.2.2 update-source Loopback0
+```
+
 ---
 ### Next-hop-self
 When a router learns a route via eBGP, the next-hop attribute is set to the IP of the external peer that advertised it.
@@ -35,6 +47,11 @@ When that route is then passed to iBGP peers, the next-hop stays unchanged — p
 Next-hop-self command the router: "when advertising routes to this iBGP neighbor, replace the next-hop with your own IP" — typically your loopback.
 Now internal routers have a reachable next-hop they can actually forward traffic to.
 
+```bash
+address-family ipv6
+  neighbor FD00::1 activate
+  neighbor FD00::1 next-hop-self
+```
 
 Below is a Sample configuration:
 
