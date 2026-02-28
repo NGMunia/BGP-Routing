@@ -1,6 +1,7 @@
 # BGP
 This lab configures BGP for both IPv4 and IPv6
 
+![Topology](/Topology.png)
 
 LOCAL PREFERENCE:
 * From AS123, traffic destined to AS150 should exit R2
