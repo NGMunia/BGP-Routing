@@ -15,7 +15,7 @@ in BGP, there's a rule:
 This is to prevent routing loops inside an AS.
 A route reflector allows iBGP routers to pair with it and not with each other instead of full mesh.
 
-
+---
 ### Update-source Loopback
 By default, BGP uses the outgoing physical interface's IP to source its TCP session. This is a problem because if that interface goes down, the BGP session drops — even if another path to the neighbor exists.
 
@@ -26,7 +26,7 @@ This must be done on both routers, otherwise the TCP session won't form — one 
 
 The loopback IPs must be reachable between the two routers. In an iBGP setup this is typically handled by your IGP (OSPF, EIGRP, IS-IS):
 
-
+---
 ### Next-hop-self
 When a router learns a route via eBGP, the next-hop attribute is set to the IP of the external peer that advertised it.
 
