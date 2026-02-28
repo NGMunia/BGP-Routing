@@ -6,7 +6,7 @@ This lab configures BGP for both IPv4 and IPv6
 
 ## AS123:
 
-**Route Reflection**
+### Route Reflection
 
 AS-123 is a non-transit AS.
 R1 acts as a route reflector.
@@ -16,7 +16,7 @@ This is to prevent routing loops inside an AS.
 A route reflector allows iBGP routers to pair with it and not with each other instead of full mesh.
 
 
-**Update-source Loopback**
+### Update-source Loopback
 By default, BGP uses the outgoing physical interface's IP to source its TCP session. This is a problem because if that interface goes down, the BGP session drops — even if another path to the neighbor exists.
 
 Using a loopback as the update-source makes the session much more stable, since loopbacks never go down unless the router itself does.
@@ -27,7 +27,7 @@ This must be done on both routers, otherwise the TCP session won't form — one 
 The loopback IPs must be reachable between the two routers. In an iBGP setup this is typically handled by your IGP (OSPF, EIGRP, IS-IS):
 
 
-**Next-hop-self**
+### Next-hop-self
 When a router learns a route via eBGP, the next-hop attribute is set to the IP of the external peer that advertised it.
 
 When that route is then passed to iBGP peers, the next-hop stays unchanged — pointing to an external IP that internal routers may have no idea how to reach.
