@@ -198,6 +198,7 @@ R2#clear ip bgp * soft
 ```
 ---
 *Verifying from AS180*
+
 To reach 2001:123:1::/24 NLRI the traffic goes via ASes 150, 130, 110 qnd finally 123.
 
 ```bash
