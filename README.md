@@ -6,6 +6,41 @@ This lab configures BGP for both IPv4 and IPv6
 
 ## AS123:
 
+### OSPFv3
+
+OSFv3 is used as the underlay transport network in the iBGP network.
+Unique local addreses are used on Loopback in order to advertise the loopback interface on the OSPF network.
+
+
+Loopback interfaces are used in iBGP peering.
+
+On R1:
+
+```bash
+interface Loopback0
+ ip address 1.1.1.1 255.255.255.255
+ ipv6 address FD00::1/128
+ ospfv3 1 ipv4 area 0
+ ospfv3 1 ipv6 area 0
+!
+interface Ethernet0/0
+ ip address 10.0.0.1 255.255.255.252
+ duplex auto
+ ipv6 address FE80::1 link-local
+ ospfv3 network point-to-point
+ ospfv3 1 ipv4 area 0
+ ospfv3 1 ipv6 area 0
+!
+interface Ethernet0/1
+ ip address 10.0.0.5 255.255.255.252
+ duplex auto
+ ipv6 address FE80::1 link-local
+ ospfv3 network point-to-point
+ ospfv3 1 ipv4 area 0
+ ospfv3 1 ipv6 area 0
+ ```
+
+
 ### Route Reflection
 
 AS-123 is a non-transit AS.
