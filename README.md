@@ -87,15 +87,126 @@ router bgp 123
 ```
 
 
-LOCAL PREFERENCE:
-* From AS123, traffic destined to AS150 should exit R2
-* From AS123, traffic destined to AS140 should exit R3.
+### Local Preference and AS prepending (Asymetric load balancing)
 
-AS-PREPENDING:
-* Traffic destined to 123.123.123.0/24 and 2001:123:1::/48 
-  prefix should enter through R2
-* Traffic destined to 124.124.124.0/24 and 2001:123:2::/48 
-  prefix should enter through R3
+**Local Preference** is a BGP attribute used to decide the outbound path from your AS.
+It answers this question:
+“If I have multiple ways to reach a destination, which exit point should my AS prefer?”
 
-* AS123 should be a non-Transit AS
-* Branch routers are configured with static routes to test connectivity/reachability
+
+**AS Prepending** on the other hand, is a BGP (Border Gateway Protocol) technique used to influence how other autonomous systems (ASes) choose the best path to reach your network.
+You basically add your own AS number multiple times to the AS path of the route you advertise.
+
+The longer the AS path, the less attractive the route appears to other networks.
+we can use AS-Prepending for asymmetric load balancing:
+
+Example use case of local preference and AS prepending in  Aysmetric load balancing:
+
+* Outbound traffic from the data center should prefer R2 as their egress router (local prefence)
+
+* Inbound traffic should ingress via R3 (use of AS-prepending {out})
+
+*Configuring Local Preference on R2*
+
+
+```bash
+route-map LOCAL_PREF_MAP permit 10
+ set local-preference 400
+
+R2(config)#router bgp 123
+R2(config-router)#add
+R2(config-router)#address-family ipv6
+R2(config-router-af)#neighbor 2001:100:1:A::1 route-map LOCAL_PREF_MAP in
+R2(config-router-af)#neighbor 2001:180:1:A::1 route-map LOCAL_PREF_MAP in
+R2(config-router-af)#end
+
+R2#clear ip bgp * soft
+
+```
+*Verifying*
+
+
+From R1 we can see egress traffic uses R2 as its next-hop:
+
+
+```bash
+R1#sh bgp ipv6 unicast
+! Output omitted for brevity
+
+     Network          Next Hop            Metric LocPrf Weight Path
+ *>   2001:123:1::/48  ::                       0         32768 i
+ *>   2001:124:1::/48  ::                       0         32768 i
+ *>i  2001:150:150:1::/64
+                       FD00::2                  0    400      0 180 150 i
+ *>i  2001:160:160:160::/64
+                       FD00::2                  0    400      0 100 130 140 160 i
+
+
+```
+**Configuring AS-Prepending on R2:( since we want Ingress traffic to go via R3)*
+
+```bash
+ip as-path access-list 10 permit ^$
+route-map AS_PREPEND_MAP permit 10
+ match as-path 10
+ set as-path prepend 123 123 123 123
+ !
+
+R2(config)#router bgp 123
+R2(config-router)#address-family ipv6
+R2(config-router-af)#neighbor 2001:180:1:A::1 route-map AS_PREPEND_MAP out
+R2(config-router-af)#neighbor 2001:100:1:A::1 route-map AS_PREPEND_MAP out
+R2(config-router-af)#end
+
+R2#clear ip bgp * soft
+```
+
+*Verifying from AS180*
+To reach 2001:123:1::/24 NLRI the traffic goes via ASes 150, 130, 110 qnd finally 123.
+
+```bash
+R180#sh bgp ipv6 unicast
+BGP table version is 11, local router ID is 180.180.1.5
+Status codes: s suppressed, d damped, h history, * valid, > best, i - internal,
+              r RIB-failure, S Stale, m multipath, b backup-path, f RT-Filter,
+              x best-external, a additional-path, c RIB-compressed,
+              t secondary path,
+Origin codes: i - IGP, e - EGP, ? - incomplete
+RPKI validation codes: V valid, I invalid, N Not found
+
+     Network          Next Hop            Metric LocPrf Weight Path
+ *>   2001:123:1::/48  2001:180:1:B::2                        0 150 130 110 123 i
+ *                     2001:180:1:A::2                        0 123 123 123 123 123 i
+ *>   2001:124:1::/48  2001:180:1:B::2                        0 150 130 110 123 i
+ *                     2001:180:1:A::2                        0 123 123 123 123 123 i
+ ```
+
+That way asymmetric load balancing of traffic is achieved.
+
+
+---
+### AS123 as a Non-Transit Network:
+
+A non-transit network in BGP is an Autonomous System (AS) that does not allow traffic to pass through it between two other external networks.
+
+It advertises its own prefixes and receives routes from upstream providers — but it does NOT carry traffic from one provider to another.
+
+In this topology, Non-transit functionality (Route filtering) is done using filter list:
+
+```bash
+address-family ipv6
+  neighbor 2001:100:1:A::1 activate
+  neighbor 2001:100:1:A::1 filter-list 10 out
+  neighbor 2001:180:1:A::1 activate
+  neighbor 2001:180:1:A::1 filter-list 10 out
+  neighbor FD00::1 activate
+  neighbor FD00::1 next-hop-self
+ exit-address-family
+!
+ip forward-protocol nd
+!
+ip as-path access-list 10 permit ^$
+```
+
+
+
