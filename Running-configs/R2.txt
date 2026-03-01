@@ -1,8 +1,10 @@
 Building configuration...
 
-Current configuration : 5792 bytes
+Current configuration : 3487 bytes
 !
-version 15.6
+! Last configuration change at 05:53:54 UTC Sun Mar 1 2026
+!
+version 15.7
 service timestamps debug datetime msec
 service timestamps log datetime msec
 no service password-encryption
@@ -15,7 +17,6 @@ boot-end-marker
 !
 !
 no aaa new-model
-ethernet lmi ce
 !
 !
 !
@@ -35,12 +36,27 @@ no ip icmp rate-limit unreachable
 !
 !
 !
+!
+!
+!
+!
+
+
+!
+!
+!
+!
 no ip domain lookup
 ip cef
 ipv6 unicast-routing
 ipv6 cef
 !
 multilink bundle-name authenticated
+!
+!
+!
+!
+!
 !
 !
 !
@@ -66,45 +82,37 @@ ip tcp synwait-time 5
 !
 interface Loopback0
  ip address 2.2.2.2 255.255.255.255
- ipv6 address 2001:2:2:2::2/128
+ ipv6 address FD00::2/128
  ospfv3 1 ipv6 area 0
  ospfv3 1 ipv4 area 0
 !
-interface GigabitEthernet0/0
+interface Ethernet0/0
  ip address 10.0.0.2 255.255.255.252
  duplex auto
- speed auto
- media-type rj45
- ipv6 address 2001:ACAD:DB8:1::2/64
+ ipv6 address FE80::2 link-local
  ospfv3 1 network point-to-point
- ospfv3 1 hello-interval 5
  ospfv3 1 ipv4 area 0
  ospfv3 1 ipv6 area 0
 !
-interface GigabitEthernet0/1
+interface Ethernet0/1
  ip address 10.0.0.9 255.255.255.252
  duplex auto
- speed auto
- media-type rj45
- ipv6 address 2001:ACAD:DB8:3::1/64
+ ipv6 address FE80::2 link-local
  ospfv3 1 network point-to-point
- ospfv3 1 hello-interval 5
  ospfv3 1 ipv4 area 0
  ospfv3 1 ipv6 area 0
 !
-interface GigabitEthernet0/2
- ip address 100.100.100.2 255.255.255.252
+interface Ethernet0/2
+ description LINK TO AS 180
+ ip address 180.180.1.2 255.255.255.252
  duplex auto
- speed auto
- media-type rj45
- ipv6 address 2001:100:100:1::2/64
+ ipv6 address 2001:180:1:A::2/64
 !
-interface GigabitEthernet0/3
- no ip address
- shutdown
+interface Ethernet0/3
+ description LINK TO AS 100
+ ip address 100.100.1.2 255.255.255.252
  duplex auto
- speed auto
- media-type rj45
+ ipv6 address 2001:100:1:A::2/64
 !
 router ospfv3 1
  router-id 2.2.2.2
@@ -119,66 +127,81 @@ router ospfv3 1
 router bgp 123
  bgp log-neighbor-changes
  neighbor 1.1.1.1 remote-as 123
- neighbor 2001:1:1:1::1 remote-as 123
- neighbor 2001:100:100:1::1 remote-as 100
- neighbor 100.100.100.1 remote-as 100
+ neighbor 1.1.1.1 update-source Loopback0
+ neighbor 2001:100:1:A::1 remote-as 100
+ neighbor 2001:180:1:A::1 remote-as 180
+ neighbor 100.100.1.1 remote-as 100
+ neighbor 180.180.1.1 remote-as 180
+ neighbor FD00::1 remote-as 123
+ neighbor FD00::1 update-source Loopback0
  !
  address-family ipv4
   neighbor 1.1.1.1 activate
   neighbor 1.1.1.1 next-hop-self
-  no neighbor 2001:1:1:1::1 activate
-  no neighbor 2001:100:100:1::1 activate
-  neighbor 100.100.100.1 activate
-  neighbor 100.100.100.1 soft-reconfiguration inbound
-  neighbor 100.100.100.1 prefix-list advertised-routes out
-  neighbor 100.100.100.1 route-map as-150-routes-map in
-  neighbor 100.100.100.1 route-map R2-prepended-map out
+  no neighbor 2001:100:1:A::1 activate
+  no neighbor 2001:180:1:A::1 activate
+  neighbor 100.100.1.1 activate
+  neighbor 100.100.1.1 route-map LOCAL_PREF_MAP in
+  neighbor 100.100.1.1 route-map AS_PREPEND_MAP out
+  neighbor 100.100.1.1 filter-list 10 out
+  neighbor 180.180.1.1 activate
+  neighbor 180.180.1.1 route-map LOCAL_PREF_MAP in
+  neighbor 180.180.1.1 route-map AS_PREPEND_MAP out
+  neighbor 180.180.1.1 filter-list 10 out
+  no neighbor FD00::1 activate
  exit-address-family
  !
  address-family ipv6
-  neighbor 2001:1:1:1::1 activate
-  neighbor 2001:1:1:1::1 next-hop-self
-  neighbor 2001:100:100:1::1 activate
-  neighbor 2001:100:100:1::1 prefix-list advertised-routes out
-  neighbor 2001:100:100:1::1 route-map as-150-routes-map in
-  neighbor 2001:100:100:1::1 route-map R2-prepended-map out
+  neighbor 2001:100:1:A::1 activate
+  neighbor 2001:100:1:A::1 route-map LOCAL_PREF_MAP in
+  neighbor 2001:100:1:A::1 route-map AS_PREPEND_MAP out
+  neighbor 2001:100:1:A::1 filter-list 10 out
+  neighbor 2001:180:1:A::1 activate
+  neighbor 2001:180:1:A::1 route-map LOCAL_PREF_MAP in
+  neighbor 2001:180:1:A::1 route-map AS_PREPEND_MAP out
+  neighbor 2001:180:1:A::1 filter-list 10 out
+  neighbor FD00::1 activate
+  neighbor FD00::1 next-hop-self
  exit-address-family
 !
 ip forward-protocol nd
 !
+ip as-path access-list 10 permit ^$
 !
 no ip http server
 no ip http secure-server
 !
+ipv6 ioam timestamp
 !
-ip prefix-list R2-prepended-prefixes seq 5 permit 124.124.124.0/24
+route-map LOCAL_PREF_MAP permit 10
+ set local-preference 400
 !
-ip prefix-list advertised-routes seq 5 permit 124.124.124.0/24
-ip prefix-list advertised-routes seq 10 permit 123.123.123.0/24
-ip prefix-list advertised-routes seq 15 deny 0.0.0.0/0
-!
-ip prefix-list as-150-routes seq 5 permit 150.150.150.0/24
-!
-!
-ipv6 prefix-list R2-prepended-prefixes seq 5 permit 2001:124:1::/48
-!
-ipv6 prefix-list advertised-routes seq 5 permit 2001:124:1::/48
-ipv6 prefix-list advertised-routes seq 10 permit 2001:123:1::/48
-ipv6 prefix-list advertised-routes seq 15 deny ::/0
-!
-ipv6 prefix-list as-150-routes seq 5 permit 2001:150:150::/48
-route-map R2-prepended-map permit 10
- match ip address prefix-list R2-prepended-prefixes
- match ipv6 address prefix-list R2-prepended-prefixes
+route-map AS_PREPEND_MAP permit 10
+ match as-path 10
  set as-path prepend 123 123 123 123
 !
-route-map R2-prepended-map permit 20
-!
-route-map as-150-routes-map permit 10
- match ip address prefix-list as-150-routes
- match ipv6 address prefix-list as-150-routes
- set local-preference 300
-!
-route-map as-150-routes-map permit 20
 !
 !
+control-plane
+!
+!
+!
+!
+!
+!
+!
+!
+line con 0
+ exec-timeout 0 0
+ privilege level 15
+ logging synchronous
+line aux 0
+ exec-timeout 0 0
+ privilege level 15
+ logging synchronous
+line vty 0 4
+ login
+ transport input none
+!
+!
+end
