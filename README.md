@@ -39,7 +39,7 @@ interface Ethernet0/1
  ospfv3 1 ipv4 area 0
  ospfv3 1 ipv6 area 0
  ```
-
+---
 
 ### Route Reflection
 
@@ -121,7 +121,7 @@ router bgp 123
  exit-address-family
 ```
 
-
+---
 ### Local Preference and AS prepending (Asymetric load balancing)
 
 **Local Preference** is a BGP attribute used to decide the outbound path from your AS.
@@ -158,6 +158,7 @@ R2(config-router-af)#end
 R2#clear ip bgp * soft
 
 ```
+---
 *Verifying*
 
 
@@ -176,9 +177,9 @@ R1#sh bgp ipv6 unicast
  *>i  2001:160:160:160::/64
                        FD00::2                  0    400      0 100 130 140 160 i
 
-
 ```
-**Configuring AS-Prepending on R2:( since we want Ingress traffic to go via R3)*
+---
+*Configuring AS-Prepending on R2:( since we want Ingress traffic to go via R3)*
 
 ```bash
 ip as-path access-list 10 permit ^$
@@ -195,7 +196,7 @@ R2(config-router-af)#end
 
 R2#clear ip bgp * soft
 ```
-
+---
 *Verifying from AS180*
 To reach 2001:123:1::/24 NLRI the traffic goes via ASes 150, 130, 110 qnd finally 123.
 
@@ -243,5 +244,16 @@ ip forward-protocol nd
 ip as-path access-list 10 permit ^$
 ```
 
+---
 
+*Testing reachability From Branch-3 to Branch-1:*
 
+```bash
+Branch-3#ping 150.150.150.10
+Type escape sequence to abort.
+Sending 5, 100-byte ICMP Echos to 150.150.150.10, timeout is 2 seconds:
+!!!!!
+Success rate is 100 percent (5/5), round-trip min/avg/max = 2/3/4 ms
+Branch-3#
+```
+---
